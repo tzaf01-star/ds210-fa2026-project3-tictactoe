@@ -103,63 +103,86 @@ impl Board {
 
     /// Whose turn it is.
     pub fn to_move(&self) -> Player {
-        self.to_move
-    }
+    self.to_move}
+    
+    pub fn moves(&self) -> Vec<Position> {
+    let mut available = Vec::new();
+
+    for row in 0..self.size() {
+        for col in 0..self.size() {
+            if self.cells[row][col] == Cell::Empty {
+                available.push((row, col));}}}
+    available}
 
     /// How many moves have been made so far.
     pub fn moves_made(&self) -> usize {
         self.history.len()
     }
 
-    /// Every position a mark can be put in, top to bottom, left to right.
-    pub fn moves(&self) -> Vec<Position> {
-        // Checkpoint 1. Walk every cell, top to bottom and left to right, and collect
-        // the positions of the empty ones. `self.size()` is the number of rows and columns.
-        todo!("Checkpoint 1: moves")
-    }
-
     /// Put the current player's mark at `position`, and make it the other player's turn.
     /// Panics if the cell isn't empty.
     pub fn apply_move(&mut self, position: Position) {
-        // Checkpoint 1. Three things have to happen, and one check comes first:
-        //   1. If the cell isn't empty, panic!, with a message that includes the word
-        //      "illegal". Nothing else in the program should ever let that happen, so when
-        //      it does you want to hear about it.
-        //   2. Put the current player's mark there. `Cell::mark(player)` makes the mark.
-        //   3. Remember the move in `self.history`, so `undo` can find it.
-        //   4. It is the other player's turn now.
-        todo!("Checkpoint 1: apply_move")
-    }
+        let (row, col) = position;
+        if self.cells[row][col] != Cell::Empty {
+        panic!("illegal move");}
+        self.cells[row][col] = Cell::mark(self.to_move);
+        self.history.push(position);
+        self.to_move = self.to_move.other();}
 
     /// Take back the last move. Panics if there is nothing to undo.
     pub fn undo(&mut self) {
-        // Checkpoint 1. Everything `apply_move` did, backwards. The last move is at the
-        // end of `self.history`. Panic if there isn't one, with the message "nothing to undo".
-        todo!("Checkpoint 1: undo")
+        let (row, col) = match self.history.pop() {
+        Some(position) => position,
+        None => panic!("nothing to undo"),};
+
+    // Remove the mark placed by the last move.
+    self.cells[row][col] = Cell::Empty;
+
+    // Give the turn back to the player whose move was undone.
+    self.to_move = self.to_move.other();
     }
 
     /// Runs of three X's minus runs of three O's, over every row, column and diagonal.
     /// Four in a row counts as two runs.
     pub fn score(&self) -> i32 {
-        // Checkpoint 1. A run of three is three cells in a straight line that all hold
-        // the same mark. Count every run of X, subtract every run of O.
-        //
-        // Every run has a first cell, and from that cell it goes one of four ways:
-        // right, down, down-right, or down-left. (Left and up would count the same runs
-        // again from the other end.) So for every cell, look in each of the four
-        // directions, and skip any direction where the third cell would be off the board.
-        // Row and column indexes are `usize`, so be careful with the down-left direction:
-        // subtracting from a `usize` that is already 0 panics.
-        todo!("Checkpoint 1: score")
-    }
+        let n = self.size();
+    let mut total = 0;
+
+    for row in 0..n {
+        for col in 0..n {
+            let mark = self.cells[row][col];
+            let value = match mark {
+                Cell::X => 1,
+                Cell::O => -1,
+                _ => 0, };
+            if value == 0 {
+                continue;
+            }
+            if col + 2 < n
+                && self.cells[row][col + 1] == mark
+                && self.cells[row][col + 2] == mark
+            {total += value;}
+            if row + 2 < n
+                && self.cells[row + 1][col] == mark
+                && self.cells[row + 2][col] == mark
+            {total += value;}
+            if row + 2 < n
+                && col + 2 < n
+                && self.cells[row + 1][col + 1] == mark
+                && self.cells[row + 2][col + 2] == mark
+            {total += value;}
+            if row + 2 < n
+                && col >= 2
+                && self.cells[row + 1][col - 1] == mark
+                && self.cells[row + 2][col - 2] == mark
+            {total += value;}}}total}
 
     /// Is the game finished? On a 3x3 board, as soon as someone has three in a row.
     /// On any board, when there are no empty cells left.
     pub fn is_over(&self) -> bool {
-        // Checkpoint 1. Two ways for a game to end: there are no moves left, on any board,
-        // or someone has three in a row, on a 3x3 board only.
-        todo!("Checkpoint 1: is_over")
-    }
+    if self.size() == 3 && self.score() != 0 {
+        return true;}
+    self.moves().is_empty()}
 
     /// Who is ahead: `Some(X)` if the score is positive, `Some(O)` if negative, `None` if
     /// tied. Only means "winner" once `is_over()` is true.
